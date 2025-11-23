@@ -148,6 +148,47 @@
       transform: none !important;
     }
 
+    .model-selector {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #1f2937;
+    }
+    .model-selector-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .model-options {
+      display: flex;
+      gap: 8px;
+    }
+    .model-btn {
+      flex: 1;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--muted);
+      transition: all 0.15s ease-out;
+      text-align: center;
+    }
+    .model-btn:hover {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+    }
+    .model-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
     .upload-preview {
       flex: 1;
       border-radius: 14px;
@@ -274,16 +315,28 @@
       <div>
         <div class="title">
           🐶 Dog Breed Classifier
-          <span class="badge">5-breed model</span>
+          <span class="badge" id="model-badge"> 5 or 120 breed </span>
         </div>
         <div class="subtitle">Upload a dog photo and get prediction probabilities instantly.</div>
+      </div>
+    </div>
+
+    <div class="model-selector">
+      <label class="model-selector-label">Select Model:</label>
+      <div class="model-options">
+        <button type="button" class="model-btn active" data-model="5breed">
+          5 Breeds
+        </button>
+        <button type="button" class="model-btn" data-model="120breed">
+          120 Breeds
+        </button>
       </div>
     </div>
 
     <div class="upload-zone">
       <div class="upload-left">
         <div class="upload-title">Upload your dog image</div>
-        <div class="upload-desc">
+        <div class="upload-desc" id="model-desc">
           Supported breeds: Saint Bernard, Scottish deerhound,
           Siberian husky, silky terrier, Yorkshire terrier.
         </div>
@@ -336,8 +389,23 @@
     const errorMsg = document.getElementById('error-msg');
     const resultsBody = document.getElementById('results-body');
     const statusPill = document.getElementById('status-pill');
+    const modelBtns = document.querySelectorAll('.model-btn');
+    const modelBadge = document.getElementById('model-badge');
+    const modelDesc = document.getElementById('model-desc');
 
     let currentFile = null;
+    let selectedModel = '5breed';
+
+    const modelInfo = {
+      '5breed': {
+        badge: '5-breed model',
+        description: 'Supported breeds: Saint Bernard, Scottish deerhound, Siberian husky, silky terrier, Yorkshire terrier.'
+      },
+      '120breed': {
+        badge: '120-breed model',
+        description: 'Supports 120 different dog breeds for comprehensive classification.'
+      }
+    };
 
     function setState(state) {
       if (state === "empty") {
@@ -373,6 +441,28 @@
         statusPill.textContent = "Running on model…";
       }
     }
+
+    // Model selection handler
+    modelBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modelType = btn.dataset.model;
+
+        // Update active state
+        modelBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update selected model
+        selectedModel = modelType;
+
+        // Update badge and description
+        modelBadge.textContent = modelInfo[modelType].badge;
+        modelDesc.textContent = modelInfo[modelType].description;
+
+        // Clear results when switching models
+        resultsBody.innerHTML = '';
+        statusPill.textContent = currentFile ? 'Ready to predict' : 'Waiting for image';
+      });
+    });
 
     setState("empty");
 
@@ -412,6 +502,7 @@
 
       const formData = new FormData();
       formData.append('file', currentFile);
+      formData.append('model_type', selectedModel);
 
       try {
         const res = await fetch('/predict', {
