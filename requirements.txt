@@ -1,0 +1,13 @@
+# Deep Learning Framework
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Image Processing
+Pillow>=9.0.0
+
+# Web Framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+
+# Required for FastAPI file uploads
+python-multipart>=0.0.6
